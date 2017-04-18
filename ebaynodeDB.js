@@ -66,10 +66,17 @@ var bay = {
 			message: "How much is the starting bid?",
 			name: "price"
 		}]).then(function(user) {
-			connection.query("INSERT INTO " + tablename + " SET ?", user, function(err, res) {
-				if (err) throw err;
-			})
-			bay.readDB();
+			user.price = parseInt(user.price);
+			console.log(user.price);
+			if (user.price) {
+				connection.query("INSERT INTO " + tablename + " SET ?", user, function(err, res) {
+					if (err) throw err;
+					bay.readDB();
+				})
+			} else {
+				console.log("Please insert a valid number");
+				bay.post();
+			}
 		})
 	}
 }
