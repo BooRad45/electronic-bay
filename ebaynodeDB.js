@@ -31,9 +31,11 @@ var bay = {
 			name: "userchoice"
 		}]).then(function(user) {
 			if (user.userchoice === "POST AN ITEM") {
+				array = [];
 				bay.post();
-			} else if (user.userchoice === "BIG ON AN ITEM") {
-				bay.bid();
+			} else if (user.userchoice === "BID ON AN ITEM") {
+				array = [];
+				bay.readDB();
 			}
 		})
 	},
@@ -53,7 +55,7 @@ var bay = {
 			for (var i = 0; i < resnode.length; i++) {
 				array.push(resnode[i].productName)
 			}
-			console.log(array);
+			bay.bid()
 		})
 	},
 	post: function() {
@@ -71,13 +73,43 @@ var bay = {
 			if (user.price) {
 				connection.query("INSERT INTO " + tablename + " SET ?", user, function(err, res) {
 					if (err) throw err;
-					bay.readDB();
 				})
 			} else {
 				console.log("Please insert a valid number");
 				bay.post();
 			}
 		})
+	},
+	bid: function() {
+		inquirer.prompt([{
+			type: "list",
+			message: "Which item would you like to bid on?",
+			choices: array,
+			name: "bidItem"
+		}, {
+			type: "input",
+			message: "How much would you like to bid?",
+			name: "currentBid"
+		}]).then(function(user) {
+			var highestBid;
+			connection.query("SELECT price FROM products WHERE productName = ?", [user.bidItem], function(err, res) {
+				highestBid = res[0].price;
+				highestBid = parseInt(highestBid);
+				user.currentBid = parseInt(user.currentBid);
+				console.log("current bid: " + user.currentBid);
+				console.log("Highest bid: " + highestBid)
+				if (user.currentBid > highestBid) {
+					connection.query("UPDATE products SET ? WHERE ?", [{
+						price: user.currentBid
+					}, {
+						productName: user.bidItem
+					}], function(err, res) {});
+					console.log("You are the highest bidder.");
+				} else {
+					console.log("Your bid is not high enough.");
+				}
+			});
+		})
 	}
 }
-bay.start();
+// bay.start();
